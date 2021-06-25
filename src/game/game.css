@@ -1,0 +1,43 @@
+.Game {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.Game--Board {
+  height: auto;
+  display: flex;
+  flex-direction: column;
+  border: 1px dashed #fff;
+  border-radius: 10px;
+}
+
+.Game--BoardRow {
+  display: flex;
+  align-items: center;
+}
+
+.Game--BoardCube {
+  height: 150px;
+  width: 150px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.Game--BoardCube:nth-child(3n+1) {
+  border-bottom: 1px dashed #fff;
+  border-right: 1px dashed #fff;
+}
+
+.Game--BoardCube:nth-child(3n+2) {
+  border-bottom: 1px dashed #fff;
+}
+
+.Game--BoardCube:nth-child(3n+3) {
+  border-bottom: 1px dashed #fff;
+  border-left: 1px dashed #fff;
+}
