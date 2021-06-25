@@ -1,8 +1,14 @@
 import React from 'react';
 
+import Board from './board/board';
+
+import './app.css';
+
 const App = () => {
     return (
-        <h1>Tic Tac Toe Game</h1>
+        <div className="App">
+            <Board type="cross" />
+        </div>
     )
 }
 
