@@ -1,5 +1,10 @@
 import React from 'react';
 
+import alienlogo from '../images/alien.png';
+import clownlogo from '../images/clown.png';
+import frieslogo from '../images/fries.png';
+import nerdlogo from '../images/nerd.png';
+import pumpkinlogo from '../images/pumpkin.png';
 import './game.css';
 
 interface Props {
