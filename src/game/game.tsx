@@ -111,18 +111,22 @@ const Game = () => {
 
     return (
         <div className="Game">
+            <h1 className="Game--Title">TIC TAC TOE</h1>
             {
                 view === "choose" ? 
-                    <div className="Game--Choose">
-                        {
-                            shapes.map((shape, shapeid) => {
-                                return (
-                                    <div className="Game--ChooseCube" key={shapeid} onClick={() => onShapeHandler(shapeid)}>
-                                        <img src={shape} className="Game--BoardIcon" alt="shape" />
-                                    </div>
-                                )
-                            })
-                        }
+                    <div className="Game--Container">
+                        <h1 className="Game--Subtitle">Choose Your Avatar!</h1>
+                        <div className="Game--Choose">
+                            {
+                                shapes.map((shape, shapeid) => {
+                                    return (
+                                        <div className="Game--ChooseCube" key={shapeid} onClick={() => onShapeHandler(shapeid)}>
+                                            <img src={shape} className="Game--BoardIcon" alt="shape" />
+                                        </div>
+                                    )
+                                })
+                            }
+                        </div>
                     </div> : 
                     view === "board" ? 
                         <div className="Game--Board">
@@ -153,7 +157,13 @@ const Game = () => {
                         </div> :
                             view === "result" ? 
                                 <div className="Game--Result">
-                                    {champion}
+                                    <h1 className="Game--Subtitle" style={{color: '#000'}}>
+                                        {
+                                            champion === "Player1" ? 'Player1 won the game!' : 
+                                            champion === "Player2" ? 'Player2 won the game!' :
+                                            'It is a tie!'
+                                        }
+                                    </h1>
                                 </div> : null
             }
         </div>

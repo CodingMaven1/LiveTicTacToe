@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;800;900&display=swap');
+
 * {
     padding: 0;
     margin: 0;
@@ -16,4 +18,5 @@ html{
     justify-content: center;
     background-color: #331281;
     color: #fff;
+    font-family: 'Orbitron', sans-serif;
 }

@@ -2,8 +2,26 @@
   height: 100%;
   width: 100%;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
+}
+
+.Game--Container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 4rem 0;
+  animation: moveUp 1s forwards ease;
+}
+
+.Game--Title {
+  padding: 4rem 0;
+  font-size: 5rem;
+  font-weight: 800;
+}
+
+.Game--Subtitle {
+  padding-bottom: 2rem;
 }
 
 .Game--Choose {
@@ -44,6 +62,7 @@
   flex-direction: column;
   border: 1px dashed #fff;
   border-radius: 10px;
+  margin: 4rem 0;
 }
 
 .Game--BoardRow {
@@ -77,4 +96,25 @@
 
 .Game--BoardIcon {
   height: 60%;
+}
+
+.Game--Result {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  margin: 4rem 0;
+  background-color: #fff;
+  min-height: 200px;
+  min-width: 400px;
+  border-radius: 10px;
+}
+
+@keyframes moveUp {
+  0% {
+    margin-top: 15rem;
+  }
+  100% {
+    margin-top: 4rem;
+  }
 }
