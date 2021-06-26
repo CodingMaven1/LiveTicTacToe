@@ -7,7 +7,7 @@ import './app.css';
 const App = () => {
     return (
         <div className="App">
-            <Board type="cross" />
+            <Board />
         </div>
     )
 }

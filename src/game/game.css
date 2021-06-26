@@ -6,6 +6,26 @@
   justify-content: center;
 }
 
+.Game--Choose {
+  display: flex;
+  border: 1px dashed #fff;
+  border-radius: 10px;
+}
+
+.Game--ChooseCube {
+  height: 150px;
+  width: 150px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border-right: 1px dashed #fff;
+}
+
+.Game--ChooseCube:last-child {
+  border-right: none;
+}
+
 .Game--Board {
   height: auto;
   display: flex;
@@ -40,4 +60,8 @@
 .Game--BoardCube:nth-child(3n+3) {
   border-bottom: 1px dashed #fff;
   border-left: 1px dashed #fff;
+}
+
+.Game--BoardIcon {
+  height: 60%;
 }
