@@ -66,6 +66,7 @@ const Game = () => {
                                             rows.map((cube, cubeid) => {
                                                 return(
                                                     <div className="Game--BoardCube" key={cubeid} 
+                                                        style={{ backgroundColor: cube === "0" ? "#FFD651" : cube === "1" ? "#07B4FF" : 'transparent' }}
                                                         onClick={() => onMoveHandler(rowid, cubeid)}>
                                                         {
                                                             cube === "0" ? 
