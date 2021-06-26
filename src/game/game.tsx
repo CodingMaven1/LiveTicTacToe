@@ -15,64 +15,31 @@ const Game = () => {
     const [moves, setMoves] = React.useState<string[][]>([["","",""],["","",""],["","",""]]);
     const [icons, setIcons] = React.useState([alienlogo, clownlogo]);
     const [champion, setChampion] = React.useState<string | null>(null)
-
     const shapes = [alienlogo, clownlogo, frieslogo, nerdlogo, pumpkinlogo];
 
     const onPlayerMoveHandler = (index1: number, index2: number) => {
         const newmoves = [...moves];
 
-        if(newmoves[index1][index2] !== ''){
+        if(moves[index1][index2] !== ''){
             return;
         }
 
         if(player === "Player") {
-
-            //Player Turn
             newmoves[index1][index2] = "0";
-            const result = checkWinner(newmoves);
             setMoves(newmoves);
+            const result = checkWinner(moves);
             if(result !== null) {
-                if(result === 1) {
+                if(result === '0') {
                     setChampion("Player")
                 } 
-                else if(result === 0) {
+                else if(result === 'tie') {
                     setChampion("Tied")
                 }
                 setView("result")
                 return
             }
             setPlayer("Computer");
-
-            //Computer Turn
-            let optimalScore = -Infinity;
-            const optimalMove = {
-                x: 0,
-                y: 0
-            };
-
-            for(let i=0; i<3; i++){
-                for(let j=0; j<3; j++){
-                    if(newmoves[i][j] === '') {
-                        newmoves[i][j] = "1";
-                        const score = computerAI(newmoves, 0, false);
-                        newmoves[i][j] = '';
-                        if( score > optimalScore ) {
-                            optimalScore = score;
-                            optimalMove.x = i;
-                            optimalMove.y = j;
-                        }
-                    }
-                }
-            }
-            newmoves[optimalMove.x][optimalMove.y] = "1";
-            const computerresult = checkWinner(newmoves);
-            setMoves(newmoves);
-            if(computerresult === -1) {
-                setChampion("Computer");
-                setView("result");
-                return;
-            } 
-            setPlayer("Player");
+            computerMove();
         }
     }
 
@@ -85,68 +52,66 @@ const Game = () => {
 
         setIcons(newicons);
         setView("board");
+
+        if(Math.floor(Math.random() * 4) === 1) {
+            computerMove();
+        }
     }
 
     function checkEquality(a:string ,b: string,c: string): boolean {
         return a === b && b === c && a !== '';
     }
 
-    function checkWinner(board: string[][]) : number | null {
+    function checkWinner(board: string[][]) : string | null {
         let winner = null;
-        let winnerfound = false;
-        let slotsleft = false;
-        let winningmove = "0";
+        let slotsleft = 0;
 
-        // Checking horizontally
         for(let i=0; i<3; i++) {
             if(checkEquality(board[i][0], board[i][1], board[i][2])) {
-                winnerfound = true;
-                winningmove = board[i][0];
+                winner = board[i][0];
             }
         }
 
-        //Checking vertically
         for(let i=0; i<3; i++) {
             if(checkEquality(board[0][i], board[1][i], board[2][i])) {
-                winnerfound = true;
-                winningmove = board[0][i];
+                winner = board[0][i];
             }
         }
 
-        //Checking diagonally
         if(checkEquality(board[0][0], board[1][1], board[2][2]) || checkEquality(board[0][2], board[1][1], board[2][0])) {
-            winnerfound = true;
-            winningmove = board[1][1];
+            winner = board[1][1];
         }
 
-        //Checking slot availability
         for(let i=0; i<3; i++){
             for(let j=0; j<3; j++){
                 if(board[i][j] === '') {
-                    slotsleft = true;
-                    break;
+                    slotsleft = slotsleft + 1;
                 }
             }
         }
 
-        if(!slotsleft && !winnerfound) {
-            winner = 0;
+        if(winner !== null && slotsleft === 0) {
+            return 'tie'
         }
-        else if(slotsleft) {
-            if(winnerfound) {
-                winner = winningmove === "0" ? 1 : -1
-            }
+        else {
+            return winner
         }
-
-        return winner
     }
 
     function computerAI (board: string[][], depth: number, isMaximizing: boolean) : number {
         const newboard = [...board];
 
-        const result = checkWinner(newboard);
+        const result = checkWinner(board);
         if(result !== null){
-            return result;
+            if(result === '0') {
+                return 1
+            }
+            else if(result === '1') {
+                return -1
+            }
+            else {
+                return 0
+            }
         }
 
         if(isMaximizing) {
@@ -181,6 +146,45 @@ const Game = () => {
             }
             return optimalScore;
         }
+    }
+
+    function computerMove() {
+        const newmoves = [...moves];
+
+        let optimalScore = -Infinity;
+        const optimalMove = {
+            x: 0,
+            y: 0
+        };
+
+        for(let i=0; i<3; i++){
+            for(let j=0; j<3; j++){
+                if(newmoves[i][j] === '') {
+                    newmoves[i][j] = "1";
+                    const score = computerAI(newmoves, 0, false);
+                    newmoves[i][j] = '';
+                    if( score > optimalScore ) {
+                        optimalScore = score;
+                        optimalMove.x = i;
+                        optimalMove.y = j;
+                    }
+                }
+            }
+        }
+        newmoves[optimalMove.x][optimalMove.y] = "1";
+        setMoves(newmoves);
+        const computerresult = checkWinner(moves);
+        if(computerresult !== null) {
+            if(computerresult === '1') {
+                setChampion("Computer");
+            } 
+            else if(computerresult === 'tie') {
+                setChampion("Tied")
+            }
+            setView("result");
+            return;
+        }
+        setPlayer("Player");
     }
 
     return (
