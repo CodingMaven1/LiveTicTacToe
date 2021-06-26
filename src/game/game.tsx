@@ -11,7 +11,7 @@ import './game.css';
 const Game = () => {
 
     const [view, setView] = React.useState<string>("choose");
-    const [player, setPlayer] = React.useState<string>("Player");
+    const [player, setPlayer] = React.useState<string>("Player1");
     const [moves, setMoves] = React.useState<string[][]>([["","",""],["","",""],["","",""]]);
     const [icons, setIcons] = React.useState([alienlogo, clownlogo]);
     const [champion, setChampion] = React.useState<string | null>(null)
@@ -24,13 +24,13 @@ const Game = () => {
             return;
         }
 
-        if(player === "Player") {
+        if(player === "Player1") {
             newmoves[index1][index2] = "0";
             setMoves(newmoves);
-            const result = checkWinner(moves);
+            const result = checkWinner(newmoves);
             if(result !== null) {
                 if(result === '0') {
-                    setChampion("Player")
+                    setChampion("Player1")
                 } 
                 else if(result === 'tie') {
                     setChampion("Tied")
@@ -38,8 +38,23 @@ const Game = () => {
                 setView("result")
                 return
             }
-            setPlayer("Computer");
-            computerMove();
+            setPlayer("Player2");
+        }
+        else {
+            newmoves[index1][index2] = "1";
+            setMoves(newmoves);
+            const result = checkWinner(newmoves);
+            if(result !== null) {
+                if(result === '1') {
+                    setChampion("Player2")
+                } 
+                else if(result === 'tie') {
+                    setChampion("Tied")
+                }
+                setView("result")
+                return
+            }
+            setPlayer("Player1");
         }
     }
 
@@ -52,10 +67,6 @@ const Game = () => {
 
         setIcons(newicons);
         setView("board");
-
-        if(Math.floor(Math.random() * 4) === 1) {
-            computerMove();
-        }
     }
 
     function checkEquality(a:string ,b: string,c: string): boolean {
@@ -90,101 +101,12 @@ const Game = () => {
             }
         }
 
-        if(winner !== null && slotsleft === 0) {
+        if(winner === null && slotsleft === 0) {
             return 'tie'
         }
         else {
             return winner
         }
-    }
-
-    function computerAI (board: string[][], depth: number, isMaximizing: boolean) : number {
-        const newboard = [...board];
-
-        const result = checkWinner(board);
-        if(result !== null){
-            if(result === '0') {
-                return 1
-            }
-            else if(result === '1') {
-                return -1
-            }
-            else {
-                return 0
-            }
-        }
-
-        if(isMaximizing) {
-            let optimalScore = -Infinity;
-            for(let i=0; i<3; i++){
-                for(let j=0; j<3; j++){
-                    if(newboard[i][j] === '') {
-                        newboard[i][j] = "1";
-                        const score = computerAI(newboard, depth+1, false);
-                        newboard[i][j] = '';
-                        if(score >= optimalScore) {
-                            optimalScore = score;
-                        }
-                    }
-                }
-            }
-            return optimalScore;
-        }
-        else {
-            let optimalScore = Infinity;
-            for(let i=0; i<3; i++){
-                for(let j=0; j<3; j++){
-                    if(newboard[i][j] === '') {
-                        newboard[i][j] = "0";
-                        const score = computerAI(newboard, depth+1, true);
-                        newboard[i][j] = '';
-                        if(score < optimalScore) {
-                            optimalScore = score;
-                        }
-                    }
-                }
-            }
-            return optimalScore;
-        }
-    }
-
-    function computerMove() {
-        const newmoves = [...moves];
-
-        let optimalScore = -Infinity;
-        const optimalMove = {
-            x: 0,
-            y: 0
-        };
-
-        for(let i=0; i<3; i++){
-            for(let j=0; j<3; j++){
-                if(newmoves[i][j] === '') {
-                    newmoves[i][j] = "1";
-                    const score = computerAI(newmoves, 0, false);
-                    newmoves[i][j] = '';
-                    if( score > optimalScore ) {
-                        optimalScore = score;
-                        optimalMove.x = i;
-                        optimalMove.y = j;
-                    }
-                }
-            }
-        }
-        newmoves[optimalMove.x][optimalMove.y] = "1";
-        setMoves(newmoves);
-        const computerresult = checkWinner(moves);
-        if(computerresult !== null) {
-            if(computerresult === '1') {
-                setChampion("Computer");
-            } 
-            else if(computerresult === 'tie') {
-                setChampion("Tied")
-            }
-            setView("result");
-            return;
-        }
-        setPlayer("Player");
     }
 
     return (
