@@ -29,8 +29,8 @@ const Game = () => {
 
             //Player Turn
             newmoves[index1][index2] = "0";
-            setMoves(newmoves)
-            const result = checkWinner(moves);
+            const result = checkWinner(newmoves);
+            setMoves(newmoves);
             if(result !== null) {
                 if(result === 1) {
                     setChampion("Player")
@@ -39,12 +39,13 @@ const Game = () => {
                     setChampion("Tied")
                 }
                 setView("result")
+                return
             }
             setPlayer("Computer");
 
             //Computer Turn
             let optimalScore = -Infinity;
-            let optimalMove = {
+            const optimalMove = {
                 x: 0,
                 y: 0
             };
@@ -57,16 +58,20 @@ const Game = () => {
                         newmoves[i][j] = '';
                         if( score > optimalScore ) {
                             optimalScore = score;
-                            optimalMove = {
-                                x: i,
-                                y: j
-                            }
+                            optimalMove.x = i;
+                            optimalMove.y = j;
                         }
                     }
                 }
             }
             newmoves[optimalMove.x][optimalMove.y] = "1";
+            const computerresult = checkWinner(newmoves);
             setMoves(newmoves);
+            if(computerresult === -1) {
+                setChampion("Computer");
+                setView("result");
+                return;
+            } 
             setPlayer("Player");
         }
     }
@@ -90,11 +95,13 @@ const Game = () => {
         let winner = null;
         let winnerfound = false;
         let slotsleft = false;
+        let winningmove = "0";
 
         // Checking horizontally
         for(let i=0; i<3; i++) {
             if(checkEquality(board[i][0], board[i][1], board[i][2])) {
                 winnerfound = true;
+                winningmove = board[i][0];
             }
         }
 
@@ -102,12 +109,14 @@ const Game = () => {
         for(let i=0; i<3; i++) {
             if(checkEquality(board[0][i], board[1][i], board[2][i])) {
                 winnerfound = true;
+                winningmove = board[0][i];
             }
         }
 
         //Checking diagonally
         if(checkEquality(board[0][0], board[1][1], board[2][2]) || checkEquality(board[0][2], board[1][1], board[2][0])) {
             winnerfound = true;
+            winningmove = board[1][1];
         }
 
         //Checking slot availability
@@ -125,7 +134,7 @@ const Game = () => {
         }
         else if(slotsleft) {
             if(winnerfound) {
-                winner = player === "Player" ? 1 : -1
+                winner = winningmove === "0" ? 1 : -1
             }
         }
 
@@ -148,7 +157,9 @@ const Game = () => {
                         newboard[i][j] = "1";
                         const score = computerAI(newboard, depth+1, false);
                         newboard[i][j] = '';
-                        optimalScore = Math.max(score, optimalScore);
+                        if(score >= optimalScore) {
+                            optimalScore = score;
+                        }
                     }
                 }
             }
@@ -162,7 +173,9 @@ const Game = () => {
                         newboard[i][j] = "0";
                         const score = computerAI(newboard, depth+1, true);
                         newboard[i][j] = '';
-                        optimalScore = Math.min(score, optimalScore);
+                        if(score < optimalScore) {
+                            optimalScore = score;
+                        }
                     }
                 }
             }
