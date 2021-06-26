@@ -18,10 +18,16 @@ const Game = () => {
 
     const shapes = [alienlogo, clownlogo, frieslogo, nerdlogo, pumpkinlogo];
 
-    const onMoveHandler = (index1: number, index2: number) => {
+    const onPlayerMoveHandler = (index1: number, index2: number) => {
         const newmoves = [...moves];
 
+        if(newmoves[index1][index2] !== ''){
+            return;
+        }
+
         if(player === "Player") {
+
+            //Player Turn
             newmoves[index1][index2] = "0";
             setMoves(newmoves)
             const result = checkWinner(moves);
@@ -35,9 +41,31 @@ const Game = () => {
                 setView("result")
             }
             setPlayer("Computer");
-        }
-        else {
-            newmoves[index1][index2] = "1";
+
+            //Computer Turn
+            let optimalScore = -Infinity;
+            let optimalMove = {
+                x: 0,
+                y: 0
+            };
+
+            for(let i=0; i<3; i++){
+                for(let j=0; j<3; j++){
+                    if(newmoves[i][j] === '') {
+                        newmoves[i][j] = "1";
+                        const score = computerAI(newmoves, 0, false);
+                        newmoves[i][j] = '';
+                        if( score > optimalScore ) {
+                            optimalScore = score;
+                            optimalMove = {
+                                x: i,
+                                y: j
+                            }
+                        }
+                    }
+                }
+            }
+            newmoves[optimalMove.x][optimalMove.y] = "1";
             setMoves(newmoves);
             setPlayer("Player");
         }
@@ -104,9 +132,43 @@ const Game = () => {
         return winner
     }
 
-    // const computerAI = (board: string[][], depth: number, isMaximizing: boolean) => {
-    //     if(isMaximizing)
-    // }
+    function computerAI (board: string[][], depth: number, isMaximizing: boolean) : number {
+        const newboard = [...board];
+
+        const result = checkWinner(newboard);
+        if(result !== null){
+            return result;
+        }
+
+        if(isMaximizing) {
+            let optimalScore = -Infinity;
+            for(let i=0; i<3; i++){
+                for(let j=0; j<3; j++){
+                    if(newboard[i][j] === '') {
+                        newboard[i][j] = "1";
+                        const score = computerAI(newboard, depth+1, false);
+                        newboard[i][j] = '';
+                        optimalScore = Math.max(score, optimalScore);
+                    }
+                }
+            }
+            return optimalScore;
+        }
+        else {
+            let optimalScore = Infinity;
+            for(let i=0; i<3; i++){
+                for(let j=0; j<3; j++){
+                    if(newboard[i][j] === '') {
+                        newboard[i][j] = "0";
+                        const score = computerAI(newboard, depth+1, true);
+                        newboard[i][j] = '';
+                        optimalScore = Math.min(score, optimalScore);
+                    }
+                }
+            }
+            return optimalScore;
+        }
+    }
 
     return (
         <div className="Game">
@@ -134,7 +196,7 @@ const Game = () => {
                                                 return(
                                                     <div className="Game--BoardCube" key={cubeid} 
                                                         style={{ backgroundColor: cube === "0" ? "#FFD651" : cube === "1" ? "#07B4FF" : 'transparent' }}
-                                                        onClick={() => onMoveHandler(rowid, cubeid)}>
+                                                        onClick={() => onPlayerMoveHandler(rowid, cubeid)}>
                                                         {
                                                             cube === "0" ? 
                                                                 <img src={icons[0]} className="Game--BoardIcon" alt="player1icon" /> : 
