@@ -5,6 +5,7 @@ import clownlogo from '../images/clown.png';
 import frieslogo from '../images/fries.png';
 import nerdlogo from '../images/nerd.png';
 import pumpkinlogo from '../images/pumpkin.png';
+import replaylogo from '../images/replay.png';
 import './game.css';
 
 
@@ -67,6 +68,14 @@ const Game = () => {
 
         setIcons(newicons);
         setView("board");
+    }
+
+    const onRestartHandler = () => {
+        setView("choose");
+        setPlayer("Player1");
+        setMoves([["","",""],["","",""],["","",""]]);
+        setIcons([alienlogo, clownlogo]);
+        setChampion(null);
     }
 
     function checkEquality(a:string ,b: string,c: string): boolean {
@@ -164,6 +173,13 @@ const Game = () => {
                                             'It is a tie!'
                                         }
                                     </h1>
+                                    <div className="Game--Restart">
+                                        <img src={replaylogo} className="Game--RestartLogo" alt="restart" />
+                                        <h1 className="Game--Subtitle" onClick={() => onRestartHandler()}
+                                            style={{color: '#331281', paddingLeft: '1rem', paddingBottom: '0'}}>
+                                                RESTART
+                                        </h1>
+                                    </div>
                                 </div> : null
             }
         </div>
