@@ -1,4 +1,6 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import { io } from "socket.io-client";
+import { CopyToClipboard } from 'react-copy-to-clipboard';
 
 import { url } from '../data/constants';
 
@@ -10,22 +12,53 @@ import pumpkinlogo from '../images/pumpkin.png';
 import replaylogo from '../images/replay.png';
 import './game.css';
 
-
 const Game = () => {
 
+    const socket = io(url);
     const [view, setView] = React.useState<string>("initialize");
     const [newgame, setNewGame] = React.useState<null | boolean>(null);
     const [player, setPlayer] = React.useState<string>("Player1");
     const [name, setName] = React.useState<string>("");
     const [room, setRoom] = React.useState<string>("");
     const [moves, setMoves] = React.useState<string[][]>([["","",""],["","",""],["","",""]]);
-    const [icons, setIcons] = React.useState([alienlogo, clownlogo]);
-    const [champion, setChampion] = React.useState<string | null>(null)
-    const shapes = [alienlogo, clownlogo, frieslogo, nerdlogo, pumpkinlogo];
+    const [icons, setIcons] = React.useState([undefined, undefined]);
+    const [champion, setChampion] = React.useState<string | null>(null);
+    const [copied, setCopied] = React.useState<boolean>(false);
+    const [shapes, setShapes] = React.useState([alienlogo, clownlogo, frieslogo, nerdlogo, pumpkinlogo]);
 
-    const onTypeHandler = (type: string) => {
-        type === "new" ? setNewGame(true) : setNewGame(false);
-        setView("choose");
+    useEffect(() => {
+        socket.on('newgame', data => {
+            setRoom(data.url);
+        });
+
+        if(newgame) {
+
+        }
+    })
+
+    const onTypeHandler = (event: React.MouseEvent, type: string) => {
+        event.preventDefault();
+
+        if(type === "new") {
+            setNewGame(true)
+            setView("choose");
+        }
+        else {
+            setNewGame(false);
+            const query = new URLSearchParams(window.location.search);
+            const roomid = query.get('roomid');
+            const creator = query.get('name');
+            const icon = query.get('icon');
+            if( icon !== null && creator !== null && roomid !== null ) {
+                const index = parseInt(icon);
+                const newicons = [...icons];
+                newicons[1] = shapes[index];
+                setIcons(newicons);
+                shapes.splice(index, 1);
+                setShapes(shapes);
+                setView("choose");
+            }
+        }
     }
 
     const onChangeHandler = (e: React.ChangeEvent<HTMLInputElement>, type: string) => {
@@ -45,13 +78,19 @@ const Game = () => {
         const newicons = [...icons];
 
         newicons[0] = shapes[index];
-        shapes.splice(index, 1);
-        newicons[1] = shapes[Math.floor(Math.random() * 4)];
-
         setIcons(newicons);
     }
 
     const onGameStartHandler = () => {
+
+        if(newgame) {
+            const index = shapes.indexOf(icons[0])
+            const data = {
+                name,
+                icon: index
+            }
+            socket.emit('creategame', data);
+        }
         setView("board");
     }
 
@@ -100,9 +139,10 @@ const Game = () => {
         setView("initialize");
         setPlayer("Player1");
         setMoves([["","",""],["","",""],["","",""]]);
-        setIcons([alienlogo, clownlogo]);
+        setIcons([undefined, undefined]);
         setChampion(null);
         setRoom("");
+        setShapes([alienlogo, clownlogo, frieslogo, nerdlogo, pumpkinlogo]);
     }
 
     function checkEquality(a:string ,b: string,c: string): boolean {
@@ -153,7 +193,7 @@ const Game = () => {
                     <div className="Game--Container">
                         <div className="Game--Div">
                             <h1 className="Game--Subtitle">Create A New Game</h1>
-                            <input type="submit" className="Game--SubmitButton" onClick={() => onTypeHandler("new")} value="Next" />
+                            <input type="submit" className="Game--SubmitButton" onClick={(e) => onTypeHandler(e,"new")} value="Next" />
                         </div>
                         <div className="Game--Div">
                             <h1 className="Game--Subtitle">OR</h1>
@@ -163,7 +203,7 @@ const Game = () => {
                             <input className="Game--Input" type="text" placeholder="Paste the game link" value={room} onChange={(event) => onChangeHandler(event,"room")} />
                             {
                                 room === "" ? null :
-                                    <input type="submit" className="Game--SubmitButton" onClick={() => onTypeHandler("old")} value="Next" />
+                                    <input type="submit" className="Game--SubmitButton" onClick={(e) => onTypeHandler(e,"old")} value="Next" />
                             }
                         </div>
                     </div> :
@@ -190,37 +230,58 @@ const Game = () => {
                                 </div>
                             </div>
                             {
-                                name === "" ? null :
+                                ( name === "" || icons[0] === undefined ) ? null :
                                     <input type="submit" className="Game--SubmitButton" onClick={onGameStartHandler} value={newgame ? "Create" : "Join"} />
                             }
                         </div> : 
                         view === "board" ? 
-                            <div className="Game--Board">
-                            {
-                                moves.map((rows, rowid) => {
-                                    return (
-                                        <div className="Game--BoardRow" key={rowid}>
+                            <React.Fragment>
+                                {
+                                    icons[1] === undefined ? 
+                                        <React.Fragment>
+                                            <div className="Game--Div">
+                                                <h1 className="Game--Subtitle">Send the Game Link To Them!</h1>
+                                                <input className="Game--Input" type="text" value={room} readOnly />
+                                                <CopyToClipboard text={room} onCopy={() => setCopied(true)} >
+                                                    <div className="Game--SubmitButton">
+                                                        {
+                                                            copied ? 'Copied!' : 'Copy Link'
+                                                        }
+                                                    </div>
+                                                </CopyToClipboard>
+                                            </div> 
+                                            <div className="Game--Div">
+                                                <h1 className="Game--Subtitle">Waiting For The Other Player To Join...</h1>
+                                            </div>
+                                        </React.Fragment> :
+                                        <div className="Game--Board">
                                             {
-                                                rows.map((cube, cubeid) => {
-                                                    return(
-                                                        <div className="Game--BoardCube" key={cubeid} 
-                                                            style={{ backgroundColor: cube === "0" ? "#FFD651" : cube === "1" ? "#07B4FF" : 'transparent' }}
-                                                            onClick={() => onPlayerMoveHandler(rowid, cubeid)}>
+                                                moves.map((rows, rowid) => {
+                                                    return (
+                                                        <div className="Game--BoardRow" key={rowid}>
                                                             {
-                                                                cube === "0" ? 
-                                                                    <img src={icons[0]} className="Game--BoardIcon" alt="player1icon" /> : 
-                                                                    cube === "1" ?
-                                                                        <img src={icons[1]} className="Game--BoardIcon" alt="player1icon" /> : null
+                                                                rows.map((cube, cubeid) => {
+                                                                    return(
+                                                                        <div className="Game--BoardCube" key={cubeid} 
+                                                                            style={{ backgroundColor: cube === "0" ? "#FFD651" : cube === "1" ? "#07B4FF" : 'transparent' }}
+                                                                            onClick={() => onPlayerMoveHandler(rowid, cubeid)}>
+                                                                            {
+                                                                                cube === "0" ? 
+                                                                                    <img src={icons[0]} className="Game--BoardIcon" alt="player1icon" /> : 
+                                                                                    cube === "1" ?
+                                                                                        <img src={icons[1]} className="Game--BoardIcon" alt="player1icon" /> : null
+                                                                            }
+                                                                        </div>
+                                                                    )
+                                                                })
                                                             }
                                                         </div>
                                                     )
                                                 })
                                             }
-                                        </div>
-                                    )
-                                })
-                            }
-                            </div> :
+                                        </div> 
+                                }
+                            </React.Fragment>:
                                 view === "result" ? 
                                     <div className="Game--Result">
                                         <h1 className="Game--Subtitle" style={{color: '#000'}}>
