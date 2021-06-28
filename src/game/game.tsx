@@ -22,6 +22,7 @@ const Game = () => {
     const [roomURL, setRoomURL] = React.useState<string>("");
     const [roomID, setRoomID] = React.useState<string>("");
     const [moves, setMoves] = React.useState<string[][]>([["","",""],["","",""],["","",""]]);
+    const [opmoves, setOpMoves] = React.useState<string[][]>([["","",""],["","",""],["","",""]]);
     const [icons, setIcons] = React.useState([undefined, undefined]);
     const [champion, setChampion] = React.useState<string | null>(null);
     const [copied, setCopied] = React.useState<boolean>(false);
@@ -54,11 +55,10 @@ const Game = () => {
         }
 
         socket.on('turnplayed', data => {
-            console.log(data)
             const newmoves = [...moves];
-
-            newmoves[parseInt(data.index1)][parseInt(data.index2)] = "0";
+            newmoves[parseInt(data.index1)][parseInt(data.index2)] = data.chance === name[0] ? "1" : "0";
             setMoves(newmoves);
+            setPlayer(data.chance);
         });
 
     });
@@ -149,9 +149,11 @@ const Game = () => {
         const data = {
             room: roomID,
             index1,
-            index2
+            index2,
+            chance: name[1]
         }
 
+        // setPlayer(name[1])
         socket.emit('playturn', data);
         // const result = checkWinner(newmoves);
         // if(result !== null) {
@@ -201,7 +203,7 @@ const Game = () => {
 
     const onRestartHandler = () => {
         setView("initialize");
-        setPlayer("Player1");
+        setPlayer("");
         setMoves([["","",""],["","",""],["","",""]]);
         setIcons([undefined, undefined]);
         setChampion(null);
