@@ -139,6 +139,22 @@
   height: 60%;
 }
 
+.Game--Options {
+  display: flex;
+  align-items: center;
+}
+
+.Game--OptionsDiv {
+  display: flex;
+  align-items: center;
+  margin-left: 3rem;
+}
+
+.Game--OptionIcon {
+  height: 50px;
+  margin-left: 1rem;
+}
+
 .Game--Result {
   display: flex;
   flex-direction: column;

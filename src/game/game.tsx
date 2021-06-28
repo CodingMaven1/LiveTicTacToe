@@ -22,13 +22,22 @@ const Game = () => {
     const [roomURL, setRoomURL] = React.useState<string>("");
     const [roomID, setRoomID] = React.useState<string>("");
     const [moves, setMoves] = React.useState<string[][]>([["","",""],["","",""],["","",""]]);
-    const [opmoves, setOpMoves] = React.useState<string[][]>([["","",""],["","",""],["","",""]]);
     const [icons, setIcons] = React.useState([undefined, undefined]);
     const [champion, setChampion] = React.useState<string | null>(null);
     const [copied, setCopied] = React.useState<boolean>(false);
     const [shapes, setShapes] = React.useState([alienlogo, clownlogo, frieslogo, nerdlogo, pumpkinlogo]);
 
     const fixedshapes = [alienlogo, clownlogo, frieslogo, nerdlogo, pumpkinlogo];
+
+    useEffect(() => {
+        const query = new URLSearchParams(window.location.search);
+        const roomid = query.get('roomid');
+
+        if(roomid !== null) {
+            setRoomURL(window.location.href);
+        }
+
+    }, []);
 
     useEffect(() => {
         socket.on('newgame', data => {
@@ -59,6 +68,11 @@ const Game = () => {
             newmoves[parseInt(data.index1)][parseInt(data.index2)] = data.chance === name[0] ? "1" : "0";
             setMoves(newmoves);
             setPlayer(data.chance);
+        });
+
+        socket.on('gameend', data => {
+            setChampion(data.champion);
+            setView("result");
         });
 
     });
@@ -153,52 +167,33 @@ const Game = () => {
             chance: name[1]
         }
 
-        // setPlayer(name[1])
         socket.emit('playturn', data);
-        // const result = checkWinner(newmoves);
-        // if(result !== null) {
-        //     if(result === '0') {
-        //         setChampion("Player1")
-        //     } 
-        //     else if(result === 'tie') {
-        //         setChampion("Tied")
-        //     }
-        //     setView("result")
-        //     return
-        // }
 
-        // if(player === "Player1") {
-        //     newmoves[index1][index2] = "0";
-        //     setMoves(newmoves);
-        //     const result = checkWinner(newmoves);
-        //     if(result !== null) {
-        //         if(result === '0') {
-        //             setChampion("Player1")
-        //         } 
-        //         else if(result === 'tie') {
-        //             setChampion("Tied")
-        //         }
-        //         setView("result")
-        //         return
-        //     }
-        //     setPlayer("Player2");
-        // }
-        // else {
-        //     newmoves[index1][index2] = "1";
-        //     setMoves(newmoves);
-        //     const result = checkWinner(newmoves);
-        //     if(result !== null) {
-        //         if(result === '1') {
-        //             setChampion("Player2")
-        //         } 
-        //         else if(result === 'tie') {
-        //             setChampion("Tied")
-        //         }
-        //         setView("result")
-        //         return
-        //     }
-        //     setPlayer("Player1");
-        // }
+        let winner = "";
+        const result = checkWinner(newmoves);
+        
+        if(result !== null) {
+            if(result === '0') {
+                setChampion(name[0]);
+                winner = name[0];
+            } 
+            else if(result === '1') {
+                setChampion(name[1]);
+                winner = name[1];
+            }
+            else if(result === 'tie') {
+                setChampion("Tied");
+                winner = "Tied"
+            }
+            setView("result");
+            
+            const windata = {
+                champion: winner,
+                room: roomID
+            };
+
+            socket.emit('gamecomplete', windata);
+        }
     }
 
     const onRestartHandler = () => {
@@ -349,6 +344,16 @@ const Game = () => {
                                                     })
                                                 }
                                             </div> 
+                                            <div className="Game--Options">
+                                                <div className="Game--OptionsDiv">
+                                                    <h1 className="Game--Subtitle" style={{ paddingBottom: '0' }}>You - </h1>
+                                                    <img src={icons[0]} className="Game--OptionIcon" alt="player1icon" />
+                                                </div>
+                                                <div className="Game--OptionsDiv">
+                                                    <h1 className="Game--Subtitle" style={{ paddingBottom: '0' }}>{name[1]} - </h1>
+                                                    <img src={icons[1]} className="Game--OptionIcon" alt="player1icon" />
+                                                </div>
+                                            </div>
                                         </div>
                                 }
                             </React.Fragment>:
@@ -356,8 +361,8 @@ const Game = () => {
                                     <div className="Game--Result">
                                         <h1 className="Game--Subtitle" style={{color: '#000'}}>
                                             {
-                                                champion === "Player1" ? 'Player1 won the game!' : 
-                                                champion === "Player2" ? 'Player2 won the game!' :
+                                                champion === name[0] ? 'You won the game!' : 
+                                                champion === name[1] ? `You lost. ${name[1]} won the game!` :
                                                 'It is a tie!'
                                             }
                                         </h1>
