@@ -18,7 +18,7 @@ const Game = () => {
     const [view, setView] = React.useState<string>("initialize");
     const [newgame, setNewGame] = React.useState<null | boolean>(null);
     const [player, setPlayer] = React.useState<string>("Player1");
-    const [name, setName] = React.useState<string>("");
+    const [name, setName] = React.useState<string[]>(["",""]);
     const [room, setRoom] = React.useState<string>("");
     const [moves, setMoves] = React.useState<string[][]>([["","",""],["","",""],["","",""]]);
     const [icons, setIcons] = React.useState([undefined, undefined]);
@@ -26,14 +26,29 @@ const Game = () => {
     const [copied, setCopied] = React.useState<boolean>(false);
     const [shapes, setShapes] = React.useState([alienlogo, clownlogo, frieslogo, nerdlogo, pumpkinlogo]);
 
+    const fixedshapes = [alienlogo, clownlogo, frieslogo, nerdlogo, pumpkinlogo];
+
     useEffect(() => {
         socket.on('newgame', data => {
             setRoom(data.url);
         });
 
         if(newgame) {
-
+            socket.on('creator', data => {
+                const newicons = [...icons];
+                const newname = [...name];
+                newicons[1] = fixedshapes[data.icon];
+                newname[1] = data.name;
+                setIcons(newicons);
+                setName(newname);
+            });
         }
+        else {
+            socket.on('opponent', () => {
+                setView("board");
+            });
+        }
+
     })
 
     const onTypeHandler = (event: React.MouseEvent, type: string) => {
@@ -52,10 +67,13 @@ const Game = () => {
             if( icon !== null && creator !== null && roomid !== null ) {
                 const index = parseInt(icon);
                 const newicons = [...icons];
+                const newname = [...name];
                 newicons[1] = shapes[index];
+                newname[1] = creator;
                 setIcons(newicons);
                 shapes.splice(index, 1);
                 setShapes(shapes);
+                setName(newname);
                 setView("choose");
             }
         }
@@ -64,7 +82,9 @@ const Game = () => {
     const onChangeHandler = (e: React.ChangeEvent<HTMLInputElement>, type: string) => {
         switch(type) {
             case "name":
-                setName(e.target.value);
+                const newname = [...name];
+                newname[0] = e.target.value;
+                setName(newname);
                 break;
             case "room":
                 setRoom(e.target.value);
@@ -86,12 +106,23 @@ const Game = () => {
         if(newgame) {
             const index = shapes.indexOf(icons[0])
             const data = {
-                name,
+                name: name[0],
                 icon: index
             }
             socket.emit('creategame', data);
+            setView("board");
         }
-        setView("board");
+        else {
+            const index = fixedshapes.indexOf(icons[0]);
+            const query = new URLSearchParams(window.location.search);
+            const roomid = query.get('roomid');
+            const data = {
+                name: name[0],
+                icon: index,
+                room: roomid
+            }
+            socket.emit('joingame', data);
+        }
     }
 
     const onPlayerMoveHandler = (index1: number, index2: number) => {
@@ -211,7 +242,7 @@ const Game = () => {
                         <div className="Game--Container">
                             <div className="Game--Div">
                                 <h1 className="Game--Subtitle">Enter Your Name!</h1>
-                                <input className="Game--Input" type="text" value={name} onChange={(event) => onChangeHandler(event,"name")} />
+                                <input className="Game--Input" type="text" value={name[0]} onChange={(event) => onChangeHandler(event,"name")} />
                             </div>
                             <div className="Game--Div">
                                 <h1 className="Game--Subtitle">Choose Your Avatar!</h1>
@@ -230,7 +261,7 @@ const Game = () => {
                                 </div>
                             </div>
                             {
-                                ( name === "" || icons[0] === undefined ) ? null :
+                                ( name[0] === "" || icons[0] === undefined ) ? null :
                                     <input type="submit" className="Game--SubmitButton" onClick={onGameStartHandler} value={newgame ? "Create" : "Join"} />
                             }
                         </div> : 
