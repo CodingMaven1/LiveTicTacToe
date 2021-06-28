@@ -1,5 +1,7 @@
 import React from 'react';
 
+import { url } from '../data/constants';
+
 import alienlogo from '../images/alien.png';
 import clownlogo from '../images/clown.png';
 import frieslogo from '../images/fries.png';
@@ -11,12 +13,47 @@ import './game.css';
 
 const Game = () => {
 
-    const [view, setView] = React.useState<string>("choose");
+    const [view, setView] = React.useState<string>("initialize");
+    const [newgame, setNewGame] = React.useState<null | boolean>(null);
     const [player, setPlayer] = React.useState<string>("Player1");
+    const [name, setName] = React.useState<string>("");
+    const [room, setRoom] = React.useState<string>("");
     const [moves, setMoves] = React.useState<string[][]>([["","",""],["","",""],["","",""]]);
     const [icons, setIcons] = React.useState([alienlogo, clownlogo]);
     const [champion, setChampion] = React.useState<string | null>(null)
     const shapes = [alienlogo, clownlogo, frieslogo, nerdlogo, pumpkinlogo];
+
+    const onTypeHandler = (type: string) => {
+        type === "new" ? setNewGame(true) : setNewGame(false);
+        setView("choose");
+    }
+
+    const onChangeHandler = (e: React.ChangeEvent<HTMLInputElement>, type: string) => {
+        switch(type) {
+            case "name":
+                setName(e.target.value);
+                break;
+            case "room":
+                setRoom(e.target.value);
+                break;
+            default: 
+                break;
+        }
+    }
+
+    const onShapeHandler = (index: number) => {
+        const newicons = [...icons];
+
+        newicons[0] = shapes[index];
+        shapes.splice(index, 1);
+        newicons[1] = shapes[Math.floor(Math.random() * 4)];
+
+        setIcons(newicons);
+    }
+
+    const onGameStartHandler = () => {
+        setView("board");
+    }
 
     const onPlayerMoveHandler = (index1: number, index2: number) => {
         const newmoves = [...moves];
@@ -59,23 +96,13 @@ const Game = () => {
         }
     }
 
-    const onShapeHandler = (index: number) => {
-        const newicons = [...icons];
-
-        newicons[0] = shapes[index];
-        shapes.splice(index, 1);
-        newicons[1] = shapes[Math.floor(Math.random() * 4)];
-
-        setIcons(newicons);
-        setView("board");
-    }
-
     const onRestartHandler = () => {
-        setView("choose");
+        setView("initialize");
         setPlayer("Player1");
         setMoves([["","",""],["","",""],["","",""]]);
         setIcons([alienlogo, clownlogo]);
         setChampion(null);
+        setRoom("");
     }
 
     function checkEquality(a:string ,b: string,c: string): boolean {
@@ -122,65 +149,95 @@ const Game = () => {
         <div className="Game">
             <h1 className="Game--Title">TIC TAC TOE</h1>
             {
-                view === "choose" ? 
+                 view === "initialize" ? 
                     <div className="Game--Container">
-                        <h1 className="Game--Subtitle">Choose Your Avatar!</h1>
-                        <div className="Game--Choose">
+                        <div className="Game--Div">
+                            <h1 className="Game--Subtitle">Create A New Game</h1>
+                            <input type="submit" className="Game--SubmitButton" onClick={() => onTypeHandler("new")} value="Next" />
+                        </div>
+                        <div className="Game--Div">
+                            <h1 className="Game--Subtitle">OR</h1>
+                        </div>
+                        <div className="Game--Div">
+                            <h1 className="Game--Subtitle">Join A Game</h1>
+                            <input className="Game--Input" type="text" placeholder="Paste the game link" value={room} onChange={(event) => onChangeHandler(event,"room")} />
                             {
-                                shapes.map((shape, shapeid) => {
+                                room === "" ? null :
+                                    <input type="submit" className="Game--SubmitButton" onClick={() => onTypeHandler("old")} value="Next" />
+                            }
+                        </div>
+                    </div> :
+                    view === "choose" ? 
+                        <div className="Game--Container">
+                            <div className="Game--Div">
+                                <h1 className="Game--Subtitle">Enter Your Name!</h1>
+                                <input className="Game--Input" type="text" value={name} onChange={(event) => onChangeHandler(event,"name")} />
+                            </div>
+                            <div className="Game--Div">
+                                <h1 className="Game--Subtitle">Choose Your Avatar!</h1>
+                                <div className="Game--Choose">
+                                    {
+                                        shapes.map((shape, shapeid) => {
+                                            return (
+                                                <div className="Game--ChooseCube" key={shapeid} 
+                                                    style={{ backgroundColor: shape === icons[0] ? '#FFD651' : "transparent" }}
+                                                    onClick={() => onShapeHandler(shapeid)}>
+                                                    <img src={shape} className="Game--BoardIcon" alt="shape" />
+                                                </div>
+                                            )
+                                        })
+                                    }
+                                </div>
+                            </div>
+                            {
+                                name === "" ? null :
+                                    <input type="submit" className="Game--SubmitButton" onClick={onGameStartHandler} value={newgame ? "Create" : "Join"} />
+                            }
+                        </div> : 
+                        view === "board" ? 
+                            <div className="Game--Board">
+                            {
+                                moves.map((rows, rowid) => {
                                     return (
-                                        <div className="Game--ChooseCube" key={shapeid} onClick={() => onShapeHandler(shapeid)}>
-                                            <img src={shape} className="Game--BoardIcon" alt="shape" />
+                                        <div className="Game--BoardRow" key={rowid}>
+                                            {
+                                                rows.map((cube, cubeid) => {
+                                                    return(
+                                                        <div className="Game--BoardCube" key={cubeid} 
+                                                            style={{ backgroundColor: cube === "0" ? "#FFD651" : cube === "1" ? "#07B4FF" : 'transparent' }}
+                                                            onClick={() => onPlayerMoveHandler(rowid, cubeid)}>
+                                                            {
+                                                                cube === "0" ? 
+                                                                    <img src={icons[0]} className="Game--BoardIcon" alt="player1icon" /> : 
+                                                                    cube === "1" ?
+                                                                        <img src={icons[1]} className="Game--BoardIcon" alt="player1icon" /> : null
+                                                            }
+                                                        </div>
+                                                    )
+                                                })
+                                            }
                                         </div>
                                     )
                                 })
                             }
-                        </div>
-                    </div> : 
-                    view === "board" ? 
-                        <div className="Game--Board">
-                        {
-                            moves.map((rows, rowid) => {
-                                return (
-                                    <div className="Game--BoardRow" key={rowid}>
-                                        {
-                                            rows.map((cube, cubeid) => {
-                                                return(
-                                                    <div className="Game--BoardCube" key={cubeid} 
-                                                        style={{ backgroundColor: cube === "0" ? "#FFD651" : cube === "1" ? "#07B4FF" : 'transparent' }}
-                                                        onClick={() => onPlayerMoveHandler(rowid, cubeid)}>
-                                                        {
-                                                            cube === "0" ? 
-                                                                <img src={icons[0]} className="Game--BoardIcon" alt="player1icon" /> : 
-                                                                cube === "1" ?
-                                                                    <img src={icons[1]} className="Game--BoardIcon" alt="player1icon" /> : null
-                                                        }
-                                                    </div>
-                                                )
-                                            })
-                                        }
-                                    </div>
-                                )
-                            })
-                        }
-                        </div> :
-                            view === "result" ? 
-                                <div className="Game--Result">
-                                    <h1 className="Game--Subtitle" style={{color: '#000'}}>
-                                        {
-                                            champion === "Player1" ? 'Player1 won the game!' : 
-                                            champion === "Player2" ? 'Player2 won the game!' :
-                                            'It is a tie!'
-                                        }
-                                    </h1>
-                                    <div className="Game--Restart">
-                                        <img src={replaylogo} className="Game--RestartLogo" alt="restart" />
-                                        <h1 className="Game--Subtitle" onClick={() => onRestartHandler()}
-                                            style={{color: '#331281', paddingLeft: '1rem', paddingBottom: '0'}}>
-                                                RESTART
+                            </div> :
+                                view === "result" ? 
+                                    <div className="Game--Result">
+                                        <h1 className="Game--Subtitle" style={{color: '#000'}}>
+                                            {
+                                                champion === "Player1" ? 'Player1 won the game!' : 
+                                                champion === "Player2" ? 'Player2 won the game!' :
+                                                'It is a tie!'
+                                            }
                                         </h1>
-                                    </div>
-                                </div> : null
+                                        <div className="Game--Restart">
+                                            <img src={replaylogo} className="Game--RestartLogo" alt="restart" />
+                                            <h1 className="Game--Subtitle" onClick={() => onRestartHandler()}
+                                                style={{color: '#331281', paddingLeft: '1rem', paddingBottom: '0'}}>
+                                                    RESTART
+                                            </h1>
+                                        </div>
+                                    </div> : null
             }
         </div>
     )
