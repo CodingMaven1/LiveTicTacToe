@@ -17,9 +17,10 @@ const Game = () => {
     const socket = io(url);
     const [view, setView] = React.useState<string>("initialize");
     const [newgame, setNewGame] = React.useState<null | boolean>(null);
-    const [player, setPlayer] = React.useState<string>("Player1");
+    const [player, setPlayer] = React.useState<string>("");
     const [name, setName] = React.useState<string[]>(["",""]);
-    const [room, setRoom] = React.useState<string>("");
+    const [roomURL, setRoomURL] = React.useState<string>("");
+    const [roomID, setRoomID] = React.useState<string>("");
     const [moves, setMoves] = React.useState<string[][]>([["","",""],["","",""],["","",""]]);
     const [icons, setIcons] = React.useState([undefined, undefined]);
     const [champion, setChampion] = React.useState<string | null>(null);
@@ -30,7 +31,8 @@ const Game = () => {
 
     useEffect(() => {
         socket.on('newgame', data => {
-            setRoom(data.url);
+            setRoomURL(data.url);
+            setRoomID(data.room);
         });
 
         if(newgame) {
@@ -41,15 +43,25 @@ const Game = () => {
                 newname[1] = data.name;
                 setIcons(newicons);
                 setName(newname);
+                setPlayer(newname[0]);
             });
         }
         else {
             socket.on('opponent', () => {
                 setView("board");
+                setPlayer(name[1]);
             });
         }
 
-    })
+        socket.on('turnplayed', data => {
+            console.log(data)
+            const newmoves = [...moves];
+
+            newmoves[parseInt(data.index1)][parseInt(data.index2)] = "0";
+            setMoves(newmoves);
+        });
+
+    });
 
     const onTypeHandler = (event: React.MouseEvent, type: string) => {
         event.preventDefault();
@@ -75,6 +87,7 @@ const Game = () => {
                 setShapes(shapes);
                 setName(newname);
                 setView("choose");
+                setRoomID(roomid);
             }
         }
     }
@@ -87,7 +100,7 @@ const Game = () => {
                 setName(newname);
                 break;
             case "room":
-                setRoom(e.target.value);
+                setRoomURL(e.target.value);
                 break;
             default: 
                 break;
@@ -114,12 +127,10 @@ const Game = () => {
         }
         else {
             const index = fixedshapes.indexOf(icons[0]);
-            const query = new URLSearchParams(window.location.search);
-            const roomid = query.get('roomid');
             const data = {
                 name: name[0],
                 icon: index,
-                room: roomid
+                room: roomID
             }
             socket.emit('joingame', data);
         }
@@ -128,42 +139,64 @@ const Game = () => {
     const onPlayerMoveHandler = (index1: number, index2: number) => {
         const newmoves = [...moves];
 
-        if(moves[index1][index2] !== ''){
+        if(moves[index1][index2] !== '' || player !== name[0]){
             return;
         }
 
-        if(player === "Player1") {
-            newmoves[index1][index2] = "0";
-            setMoves(newmoves);
-            const result = checkWinner(newmoves);
-            if(result !== null) {
-                if(result === '0') {
-                    setChampion("Player1")
-                } 
-                else if(result === 'tie') {
-                    setChampion("Tied")
-                }
-                setView("result")
-                return
-            }
-            setPlayer("Player2");
+        newmoves[index1][index2] = "0";
+        setMoves(newmoves);
+
+        const data = {
+            room: roomID,
+            index1,
+            index2
         }
-        else {
-            newmoves[index1][index2] = "1";
-            setMoves(newmoves);
-            const result = checkWinner(newmoves);
-            if(result !== null) {
-                if(result === '1') {
-                    setChampion("Player2")
-                } 
-                else if(result === 'tie') {
-                    setChampion("Tied")
-                }
-                setView("result")
-                return
-            }
-            setPlayer("Player1");
-        }
+
+        socket.emit('playturn', data);
+        // const result = checkWinner(newmoves);
+        // if(result !== null) {
+        //     if(result === '0') {
+        //         setChampion("Player1")
+        //     } 
+        //     else if(result === 'tie') {
+        //         setChampion("Tied")
+        //     }
+        //     setView("result")
+        //     return
+        // }
+
+        // if(player === "Player1") {
+        //     newmoves[index1][index2] = "0";
+        //     setMoves(newmoves);
+        //     const result = checkWinner(newmoves);
+        //     if(result !== null) {
+        //         if(result === '0') {
+        //             setChampion("Player1")
+        //         } 
+        //         else if(result === 'tie') {
+        //             setChampion("Tied")
+        //         }
+        //         setView("result")
+        //         return
+        //     }
+        //     setPlayer("Player2");
+        // }
+        // else {
+        //     newmoves[index1][index2] = "1";
+        //     setMoves(newmoves);
+        //     const result = checkWinner(newmoves);
+        //     if(result !== null) {
+        //         if(result === '1') {
+        //             setChampion("Player2")
+        //         } 
+        //         else if(result === 'tie') {
+        //             setChampion("Tied")
+        //         }
+        //         setView("result")
+        //         return
+        //     }
+        //     setPlayer("Player1");
+        // }
     }
 
     const onRestartHandler = () => {
@@ -172,7 +205,8 @@ const Game = () => {
         setMoves([["","",""],["","",""],["","",""]]);
         setIcons([undefined, undefined]);
         setChampion(null);
-        setRoom("");
+        setRoomURL("");
+        setRoomID("");
         setShapes([alienlogo, clownlogo, frieslogo, nerdlogo, pumpkinlogo]);
     }
 
@@ -231,9 +265,9 @@ const Game = () => {
                         </div>
                         <div className="Game--Div">
                             <h1 className="Game--Subtitle">Join A Game</h1>
-                            <input className="Game--Input" type="text" placeholder="Paste the game link" value={room} onChange={(event) => onChangeHandler(event,"room")} />
+                            <input className="Game--Input" type="text" placeholder="Paste the game link" value={roomURL} onChange={(event) => onChangeHandler(event,"room")} />
                             {
-                                room === "" ? null :
+                                roomURL === "" ? null :
                                     <input type="submit" className="Game--SubmitButton" onClick={(e) => onTypeHandler(e,"old")} value="Next" />
                             }
                         </div>
@@ -272,8 +306,8 @@ const Game = () => {
                                         <React.Fragment>
                                             <div className="Game--Div">
                                                 <h1 className="Game--Subtitle">Send the Game Link To Them!</h1>
-                                                <input className="Game--Input" type="text" value={room} readOnly />
-                                                <CopyToClipboard text={room} onCopy={() => setCopied(true)} >
+                                                <input className="Game--Input" type="text" value={roomURL} readOnly />
+                                                <CopyToClipboard text={roomURL} onCopy={() => setCopied(true)} >
                                                     <div className="Game--SubmitButton">
                                                         {
                                                             copied ? 'Copied!' : 'Copy Link'
@@ -285,32 +319,35 @@ const Game = () => {
                                                 <h1 className="Game--Subtitle">Waiting For The Other Player To Join...</h1>
                                             </div>
                                         </React.Fragment> :
-                                        <div className="Game--Board">
-                                            {
-                                                moves.map((rows, rowid) => {
-                                                    return (
-                                                        <div className="Game--BoardRow" key={rowid}>
-                                                            {
-                                                                rows.map((cube, cubeid) => {
-                                                                    return(
-                                                                        <div className="Game--BoardCube" key={cubeid} 
-                                                                            style={{ backgroundColor: cube === "0" ? "#FFD651" : cube === "1" ? "#07B4FF" : 'transparent' }}
-                                                                            onClick={() => onPlayerMoveHandler(rowid, cubeid)}>
-                                                                            {
-                                                                                cube === "0" ? 
-                                                                                    <img src={icons[0]} className="Game--BoardIcon" alt="player1icon" /> : 
-                                                                                    cube === "1" ?
-                                                                                        <img src={icons[1]} className="Game--BoardIcon" alt="player1icon" /> : null
-                                                                            }
-                                                                        </div>
-                                                                    )
-                                                                })
-                                                            }
-                                                        </div>
-                                                    )
-                                                })
-                                            }
-                                        </div> 
+                                        <div className="Game--Div">
+                                            <h1 className="Game--Subtitle">{player === name[0] ? "Your" : `${player}'s`} Turn</h1>
+                                            <div className="Game--Board">
+                                                {
+                                                    moves.map((rows, rowid) => {
+                                                        return (
+                                                            <div className="Game--BoardRow" key={rowid}>
+                                                                {
+                                                                    rows.map((cube, cubeid) => {
+                                                                        return(
+                                                                            <div className="Game--BoardCube" key={cubeid} 
+                                                                                style={{ backgroundColor: cube === "0" ? "#FFD651" : cube === "1" ? "#07B4FF" : 'transparent' }}
+                                                                                onClick={() => onPlayerMoveHandler(rowid, cubeid)}>
+                                                                                {
+                                                                                    cube === "0" ? 
+                                                                                        <img src={icons[0]} className="Game--BoardIcon" alt="player1icon" /> : 
+                                                                                        cube === "1" ?
+                                                                                            <img src={icons[1]} className="Game--BoardIcon" alt="player1icon" /> : null
+                                                                                }
+                                                                            </div>
+                                                                        )
+                                                                    })
+                                                                }
+                                                            </div>
+                                                        )
+                                                    })
+                                                }
+                                            </div> 
+                                        </div>
                                 }
                             </React.Fragment>:
                                 view === "result" ? 
