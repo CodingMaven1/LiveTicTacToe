@@ -14,6 +14,13 @@
   animation: moveUp 1s forwards ease;
 }
 
+.Game--Div {
+  margin-bottom: 5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
 .Game--Title {
   padding: 4rem 0;
   font-size: 5rem;
@@ -22,6 +29,44 @@
 
 .Game--Subtitle {
   padding-bottom: 2rem;
+}
+
+.Game--Input {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 2rem;
+  width: 400px;
+  text-decoration: none;
+  background-color: transparent;
+  border: 1px solid #fff;
+  border-radius: 5px;
+  padding: 1rem;
+  color: #fff;
+  margin-bottom: 2rem;
+}
+
+.Game--Input:focus {
+  outline: none;
+}
+
+.Game--Input::placeholder{
+  font-family: 'Orbitron', sans-serif;
+  font-size: 2rem;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.Game--SubmitButton {
+  padding: 1rem 2rem;
+  text-decoration: none;
+  font-family: 'Orbitron', sans-serif;
+  background-color: #07B4FF;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  border-radius: 5px;
+  font-size: 2rem;
+  text-transform: uppercase;
+  font-weight: 500;
+  letter-spacing: 1px
 }
 
 .Game--Choose {
@@ -50,10 +95,6 @@
   border-right: none;
   border-top-right-radius: 10px;
   border-bottom-right-radius: 10px;
-}
-
-.Game--ChooseCube:hover {
-  background-color: #FFD651;
 }
 
 .Game--Board {
@@ -96,6 +137,22 @@
 
 .Game--BoardIcon {
   height: 60%;
+}
+
+.Game--Options {
+  display: flex;
+  align-items: center;
+}
+
+.Game--OptionsDiv {
+  display: flex;
+  align-items: center;
+  margin-left: 3rem;
+}
+
+.Game--OptionIcon {
+  height: 50px;
+  margin-left: 1rem;
 }
 
 .Game--Result {
