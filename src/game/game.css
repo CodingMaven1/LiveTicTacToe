@@ -186,3 +186,40 @@
     margin-top: 4rem;
   }
 }
+
+@media all and (width: 500px) {
+  .Game {
+    justify-content: center;
+  }  
+  .Game--Title {
+    font-size: 8rem;
+  }
+  .Game--Subtitle {
+    font-size: 4rem;
+    padding-bottom: 3rem;
+  }
+  .Game--Input {
+    font-size: 3rem;
+    width: 700px;
+    padding: 2rem;
+    margin: 2rem;
+  }
+  .Game--Input::placeholder{
+    font-size: 3rem;
+  }
+  .Game--SubmitButton {
+    padding: 2rem 3rem;
+    font-size: 3rem;
+  }
+  .Game--ChooseCube {
+    height: 180px;
+    width: 180px;
+  }
+  .Game--BoardCube {
+    height: 180px;
+    width: 180px;
+  }
+  .Game--Board {
+    margin: 5rem 0;
+  }
+}
