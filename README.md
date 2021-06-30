@@ -12,10 +12,14 @@ Play TicTacToe live with your friends! Create a Room or join one. Choose your Av
 
 ## Installation
 
+Clone the backend repository too for this game! (https://github.com/CodingMaven1/LiveTicTacToe-Backend). Then in both the repositories, run the following command:
+
 ```bash
 npm i
 npm start
 ```
+
+The application will be running on port 4000.
 
 
 ## Build
